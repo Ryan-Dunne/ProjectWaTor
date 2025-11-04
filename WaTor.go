@@ -4,13 +4,14 @@ import (
 	"image/color"
 	"log"
 	"math/rand"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Game struct{}
 
-const scale int = 2 //Size of entities
+const scale int = 5 //Size of entities
 const width = 600
 const height = 600
 
@@ -18,19 +19,32 @@ var blue color.Color = color.RGBA{69, 145, 196, 255}
 var yellow color.Color = color.RGBA{255, 230, 120, 255}
 var red color.Color = color.RGBA{255, 0, 0, 255}
 
+var NumShark = 80   //Starting Shark Population
+var NumFish = 150   //Starting Fish Population
+var FishBreed = 10  //Num of chronons that must pass before fish can breed
+var SharkBreed = 12 //Num of chronons that must pass before sharks can breed
+var Starve = 15     //Num of time sharks can go without food before death
+// var GridSize		//Dimensions of world
+var Threads = 1 //Num of threads to use
+
 var grid [width][height]uint8 = [width][height]uint8{}
 var buffer [width][height]uint8 = [width][height]uint8{}
 var count int = 0
 
+func Chronon() {
+	time.Sleep(5 * time.Millisecond)
+}
+
 func (g *Game) Update() error {
+	Chronon()
 	for x := 1; x < width-1; x++ { //Across One pixel, when column complete
 		for y := 1; y < height-1; y++ { //Iterates column
 			buffer[x][y] = 0 //Buffer defaults to no entity
 
-			n := grid[x-1][y-1] + grid[x-1][y+0] + //Checks neighbours top left bottom right from current position & adds 1 or 0
-				grid[x-1][y+1] + grid[x+0][y-1] +
-				grid[x+0][y+1] + grid[x+1][y-1] +
-				grid[x+1][y+0] + grid[x+1][y+1]
+			n := grid[x-1][y+0] + //Checks the neighbourhood - W,S,N,E
+				grid[x+0][y-1] +
+				grid[x+0][y+1] +
+				grid[x+1][y+0]
 
 			if grid[x][y] == 0 && n == 3 { //If tile empty & 3 entities surround
 				buffer[x][y] = 1 //Create new entity
@@ -72,15 +86,14 @@ func main() {
 	game := &Game{}
 	ebiten.SetWindowSize(1280, 720)
 	ebiten.SetWindowTitle("My Game")
-	for x := 1; x < width-1; x++ { //Game setup, randomises each cell
-		for y := 1; y < height-1; y++ {
-			if rand.Float32() < 0.5 {
-				grid[x][y] = 1
-			}
-		}
-	}
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func setupFish() {
+	for i := 0; i < NumFish; i++ {
+		rand.Int() //Generate random coords to spawn fishs
 	}
 }
