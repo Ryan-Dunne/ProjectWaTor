@@ -25,12 +25,16 @@ var count int = 0
 func (g *Game) Update() error {
 	for x := 1; x < width-1; x++ { //Across One pixel, when column complete
 		for y := 1; y < height-1; y++ { //Iterates column
-			buffer[x][y] = 0
-			n := grid[x-1][y-1] + grid[x-1][y+0] + grid[x-1][y+1] + grid[x+0][y-1] + grid[x+0][y+1] + grid[x+1][y-1] + grid[x+1][y+0] + grid[x+1][y+1]
+			buffer[x][y] = 0 //Buffer defaults to no entity
 
-			if grid[x][y] == 0 && n == 3 {
-				buffer[x][y] = 1
-			} else if n < 2 || n > 3 {
+			n := grid[x-1][y-1] + grid[x-1][y+0] + //Checks neighbours top left bottom right from current position & adds 1 or 0
+				grid[x-1][y+1] + grid[x+0][y-1] +
+				grid[x+0][y+1] + grid[x+1][y-1] +
+				grid[x+1][y+0] + grid[x+1][y+1]
+
+			if grid[x][y] == 0 && n == 3 { //If tile empty & 3 entities surround
+				buffer[x][y] = 1 //Create new entity
+			} else if n < 2 || n > 3 { //If there's too few or too many entities, leave current cell blank
 				buffer[x][y] = 0
 			} else {
 				buffer[x][y] = grid[x][y]
@@ -38,9 +42,9 @@ func (g *Game) Update() error {
 		}
 	}
 
-	temp := buffer
-	buffer = grid
-	grid = temp
+	temp := buffer //Create copy of buffer(The updated grid)
+	buffer = grid  //Buffer equals current grid state
+	grid = temp    //temp(buffer) becomes new grid
 	return nil
 }
 
@@ -68,7 +72,7 @@ func main() {
 	game := &Game{}
 	ebiten.SetWindowSize(1280, 720)
 	ebiten.SetWindowTitle("My Game")
-	for x := 1; x < width-1; x++ {
+	for x := 1; x < width-1; x++ { //Game setup, randomises each cell
 		for y := 1; y < height-1; y++ {
 			if rand.Float32() < 0.5 {
 				grid[x][y] = 1
