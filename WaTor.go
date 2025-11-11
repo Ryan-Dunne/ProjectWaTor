@@ -12,16 +12,16 @@ import (
 
 type Game struct{}
 
-const scale int = 5 //Size of entities
-const width = 800
-const height = 800
+const scale int = 2
+const width = 300
+const height = 300
 
 var blue color.Color = color.RGBA{69, 145, 196, 255}
 var yellow color.Color = color.RGBA{255, 230, 120, 255}
 var red color.Color = color.RGBA{255, 0, 0, 255}
 
-var NumShark = 500  //Starting Shark Population
-var NumFish = 650   //Starting Fish Population
+var NumShark = 120  //Starting Shark Population
+var NumFish = 600   //Starting Fish Population
 var FishBreed = 10  //Num of chronons that must pass before fish can breed
 var SharkBreed = 12 //Num of chronons that must pass before sharks can breed
 var Starve = 15     //Num of time sharks can go without food before death
@@ -33,32 +33,31 @@ var buffer [width][height]uint8 = [width][height]uint8{}
 var count int = 0
 
 func Chronon() {
-	time.Sleep(5 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func (g *Game) Update() error {
-	//Chronon()
 	for x := 1; x < width-1; x++ { //Across One pixel, when column complete
 		for y := 1; y < height-1; y++ { //Iterates column
 
-			//	n := grid[x-1][y+0] + //Checks the neighbourhood - W,S,N,E
-			//		grid[x+0][y-1] +
-			//		grid[x+0][y+1] +
-			//		grid[x+1][y+0]
+			fish := grid[x-1][y+0] + //Checks the neighbourhood - W,S,N,E
+				grid[x+0][y-1] +
+				grid[x+0][y+1] +
+				grid[x+1][y+0]
 
-			//	if grid[x][y] == 0 && n == 3 { //If tile empty & 3 entities surround
-			//		buffer[x][y] = 1 //Create new entity
-			//	} else if n < 2 || n > 3 { //If there's too few or too many entities, leave current cell blank
-			//		buffer[x][y] = 0
-			//	} else {
-			//		buffer[x][y] = grid[x][y]
-			//	}
+			if grid[x][y] == 0 && fish == 3 { //If tile empty & 3 entities surround
+				buffer[x][y] = 1 //Create new entity
+			} else if fish < 2 || fish > 3 { //If there's too few or too many entities, leave current cell blank
+				buffer[x][y] = 0
+			} else {
+				buffer[x][y] = grid[x][y]
+			}
 		}
 	}
-
-	temp := buffer //Create copy of buffer(The updated grid)
-	buffer = grid  //Buffer equals current grid state
-	grid = temp    //temp(buffer) becomes new grid
+	//Chronon()
+	temp := grid  //Create copy of buffer(The updated grid)
+	buffer = grid //Buffer equals current grid state
+	grid = temp   //temp(buffer) becomes new grid
 	return nil
 }
 
@@ -85,11 +84,11 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
+	game := &Game{}
+	ebiten.SetWindowSize(1280, 720)
+	ebiten.SetWindowTitle("My Game")
 	setupFish()
 	setupShark()
-	game := &Game{}
-	ebiten.SetWindowSize(800, 800)
-	ebiten.SetWindowTitle("My Game")
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
@@ -98,31 +97,33 @@ func main() {
 
 func setupFish() {
 	for i := 0; i < NumFish; i++ {
-		fishSpawnX := rand.Intn(800) //Generate random coords to spawn fish
-		fishSpawnY := rand.Intn(800)
-		buffer[fishSpawnX][fishSpawnY] = 1
+		fishSpawnX := rand.Intn(300) //Generate random coords to spawn fish
+		fishSpawnY := rand.Intn(300)
+		if grid[fishSpawnX][fishSpawnY] != 0 { //Prevents overlap
+			i--
+			continue //Skips loop if coords in use
+		}
+		grid[fishSpawnX][fishSpawnY] = 1
 
 	}
-	printGrid()
 }
 
 func setupShark() {
 	for i := 0; i < NumShark; i++ {
-		sharkSpawnX := rand.Intn(800) //Generate random coords to spawn fish
-		sharkSpawnY := rand.Intn(800)
-		if buffer[sharkSpawnX][sharkSpawnY] != 0 {
+		sharkSpawnX := rand.Intn(300) //Generate random coords to spawn fish
+		sharkSpawnY := rand.Intn(300)
+		if grid[sharkSpawnX][sharkSpawnY] != 0 { //Prevents overlap
 			i--
-			continue
+			continue //Skips loop if coords in use
 		}
-		buffer[sharkSpawnX][sharkSpawnY] = 2
+		grid[sharkSpawnX][sharkSpawnY] = 2
 	}
-	printGrid()
 }
 
-func printGrid() {
+func printGrid() { //For Debugging
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			fmt.Printf("%d ", buffer[x][y])
+			fmt.Printf("%d ", grid[x][y])
 		}
 		fmt.Println()
 	}
