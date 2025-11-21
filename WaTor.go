@@ -16,8 +16,8 @@ const width = 800
 const height = 400
 const fish = 1
 const shark = 2
-const noOfFish = 1
-const noOfShark = 1
+const noOfFish = 8000
+const noOfShark = 500
 
 var wm [][]*creature
 
@@ -42,8 +42,26 @@ func (g *Game) Update() error {
 			if wm[x][y] == nil {
 				continue
 			}
-			if wm[x][y].species == fish {
+			if wm[x][y].species == fish && wm[x][y].hasMoved == false {
+				availableYAxis := []int{}
+				availableXAxis := []int{}
+				if wm[x][y-1] == nil {
+					availableYAxis = append(availableYAxis, -1)
+				}
+				if wm[x][y+1] == nil {
+					availableYAxis = append(availableYAxis, +1)
+				}
+				if wm[x-1][y] == nil {
+					availableXAxis = append(availableXAxis, -1)
+				}
+				if wm[x+1][y] == nil {
+					availableXAxis = append(availableXAxis, +1)
+				}
 
+				newX := availableXAxis[rand.Intn(len(availableXAxis))]
+				newY := availableYAxis[rand.Intn(len(availableYAxis))]
+
+				wm[x][y] = wm[newX][newY]
 			}
 		}
 	}
