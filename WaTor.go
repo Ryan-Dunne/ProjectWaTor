@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 	"math/rand"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -12,12 +13,12 @@ import (
 type Game struct{}
 
 const scale int = 2 //Size of entities
-const width = 800
+const width = 400
 const height = 400
 const fish = 1
 const shark = 2
-const noOfFish = 8000
-const noOfShark = 500
+const noOfFish = 10000
+const noOfShark = 1500
 
 var wm [][]*creature
 
@@ -37,6 +38,8 @@ var grid [width][height]uint8 = [width][height]uint8{}
 var buffer [width][height]uint8 = [width][height]uint8{}
 
 func (g *Game) Update() error {
+	Chronon()
+	//printGrid()
 	for x := 1; x < width-1; x++ { //Across One pixel, when column complete
 		for y := 1; y < height-1; y++ { //Iterates column
 			if wm[x][y] == nil {
@@ -58,17 +61,79 @@ func (g *Game) Update() error {
 					availableXAxis = append(availableXAxis, +1)
 				}
 
-				newX := availableXAxis[rand.Intn(len(availableXAxis))]
-				newY := availableYAxis[rand.Intn(len(availableYAxis))]
+				switch {
+				case len(availableXAxis) > 0 && len(availableYAxis) > 0:
+					dx := availableXAxis[rand.Intn(len(availableXAxis))]
+					dy := availableYAxis[rand.Intn(len(availableYAxis))]
+					wm[x+dx][y+dy] = wm[x][y]
+					wm[x+dx][y+dy].hasMoved = true
+					wm[x][y] = nil
+					continue
 
-				wm[x][y] = wm[newX][newY]
+				case len(availableXAxis) > 0:
+					dx := availableXAxis[rand.Intn(len(availableXAxis))]
+					wm[x+dx][y] = wm[x][y]
+					wm[x+dx][y].hasMoved = true
+					wm[x][y] = nil
+					continue
+
+				case len(availableYAxis) > 0:
+					dy := availableYAxis[rand.Intn(len(availableYAxis))]
+					wm[x][y+dy] = wm[x][y]
+					wm[x][y+dy].hasMoved = true
+					wm[x][y] = nil
+					continue
+
+				default:
+					continue
+				}
+			}
+			if wm[x][y].species == shark && wm[x][y].hasMoved == false {
+				availableYAxis := []int{}
+				availableXAxis := []int{}
+				if wm[x][y-1] == nil {
+					availableYAxis = append(availableYAxis, -1)
+				}
+				if wm[x][y+1] == nil {
+					availableYAxis = append(availableYAxis, +1)
+				}
+				if wm[x-1][y] == nil {
+					availableXAxis = append(availableXAxis, -1)
+				}
+				if wm[x+1][y] == nil {
+					availableXAxis = append(availableXAxis, +1)
+				}
+
+				switch {
+				case len(availableXAxis) > 0 && len(availableYAxis) > 0:
+					dx := availableXAxis[rand.Intn(len(availableXAxis))]
+					dy := availableYAxis[rand.Intn(len(availableYAxis))]
+					wm[x+dx][y+dy] = wm[x][y]
+					wm[x+dx][y+dy].hasMoved = true
+					wm[x][y] = nil
+					continue
+
+				case len(availableXAxis) > 0:
+					dx := availableXAxis[rand.Intn(len(availableXAxis))]
+					wm[x+dx][y] = wm[x][y]
+					wm[x+dx][y].hasMoved = true
+					wm[x][y] = nil
+					continue
+
+				case len(availableYAxis) > 0:
+					dy := availableYAxis[rand.Intn(len(availableYAxis))]
+					wm[x][y+dy] = wm[x][y]
+					wm[x][y+dy].hasMoved = true
+					wm[x][y] = nil
+					continue
+
+				default:
+					continue
+				}
 			}
 		}
 	}
 
-	temp := buffer //Create copy of buffer(The updated grid)
-	buffer = grid  //Buffer equals current grid state
-	grid = temp    //temp(buffer) becomes new grid
 	return nil
 }
 
@@ -104,7 +169,7 @@ func main() {
 	}
 	setUpFish()
 	setUpShark()
-	printGrid()
+	//printGrid()
 
 	ebiten.SetWindowSize(1280, 720)
 	ebiten.SetWindowTitle("My Game")
@@ -160,6 +225,18 @@ func printGrid() {
 			} else if wm[i][j].species == shark {
 				fmt.Print("S")
 			}
+		}
+	}
+}
+
+func Chronon() {
+	time.Sleep(1 * time.Second)
+	for x := 1; x < width-1; x++ { //Across One pixel, when column complete
+		for y := 1; y < height-1; y++ { //Iterates column
+			if wm[x][y] != nil {
+				wm[x][y].hasMoved = false
+			}
+
 		}
 	}
 }
