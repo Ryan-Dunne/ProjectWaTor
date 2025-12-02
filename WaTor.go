@@ -27,7 +27,7 @@ const width = 400
 const height = 400
 const fish = 1
 const shark = 2
-const noOfFish = 100000
+const noOfFish = 150000
 const noOfShark = 5000
 
 var wm [][]*creature
@@ -52,14 +52,14 @@ func (g *Game) Update() error {
 	//printGrid()
 	for x := 1; x < width-1; x++ { //Across One pixel, when column complete
 		for y := 1; y < height-1; y++ { //Iterates column
-			if wm[x][y] == nil {
+			if wm[x][y] == nil { //Used to avoid dereferencing a nullpointer error
 				continue
 			}
 			if wm[x][y].species == fish && wm[x][y].hasMoved == false {
 				availableYAxis := []int{}
 				availableXAxis := []int{}
 				if wm[x][y-1] == nil {
-					availableYAxis = append(availableYAxis, -1)
+					availableYAxis = append(availableYAxis, -1) //If cell is null append direction to availableAxes
 				}
 				if wm[x][y+1] == nil {
 					availableYAxis = append(availableYAxis, +1)
@@ -72,8 +72,8 @@ func (g *Game) Update() error {
 				}
 
 				switch {
-				case len(availableXAxis) > 0 && len(availableYAxis) > 0:
-					dx := availableXAxis[rand.Intn(len(availableXAxis))]
+				case len(availableXAxis) > 0 && len(availableYAxis) > 0: //If Both directions have available space
+					dx := availableXAxis[rand.Intn(len(availableXAxis))] //Randomises position
 					dy := availableYAxis[rand.Intn(len(availableYAxis))]
 					wm[x+dx][y+dy] = wm[x][y]
 					wm[x+dx][y+dy].hasMoved = true
@@ -101,7 +101,7 @@ func (g *Game) Update() error {
 			if wm[x][y].species == shark && wm[x][y].hasMoved == false {
 				availableYAxis := []int{}
 				availableXAxis := []int{}
-				if wm[x][y-1] == nil || wm[x][y-1].species != shark {
+				if wm[x][y-1] == nil || wm[x][y-1].species != shark { //Avoids dereferencing null pointer panic & collision w/ other sharks
 					availableYAxis = append(availableYAxis, -1)
 				}
 				if wm[x][y+1] == nil || wm[x][y+1].species != shark {
@@ -119,7 +119,7 @@ func (g *Game) Update() error {
 					dx := availableXAxis[rand.Intn(len(availableXAxis))]
 					dy := availableYAxis[rand.Intn(len(availableYAxis))]
 					if wm[x+dx][y+dy] != nil && wm[x+dx][y+dy].species == fish {
-						wm[x][y].health = wm[x][y].health + 1
+						wm[x][y].health = wm[x][y].health + 30
 					}
 					wm[x+dx][y+dy] = wm[x][y]
 					wm[x+dx][y+dy].hasMoved = true
@@ -129,7 +129,7 @@ func (g *Game) Update() error {
 				case len(availableXAxis) > 0:
 					dx := availableXAxis[rand.Intn(len(availableXAxis))]
 					if wm[x+dx][y] != nil && wm[x+dx][y].species == fish {
-						wm[x][y].health = wm[x][y].health + 1
+						wm[x][y].health = wm[x][y].health + 30
 					}
 					wm[x+dx][y] = wm[x][y]
 					wm[x+dx][y].hasMoved = true
@@ -139,7 +139,7 @@ func (g *Game) Update() error {
 				case len(availableYAxis) > 0:
 					dy := availableYAxis[rand.Intn(len(availableYAxis))]
 					if wm[x][y+dy] != nil && wm[x][y+dy].species == fish {
-						wm[x][y].health = wm[x][y].health + 50
+						wm[x][y].health = wm[x][y].health + 30
 					}
 					wm[x][y+dy] = wm[x][y]
 					wm[x][y+dy].hasMoved = true
@@ -249,15 +249,15 @@ func printGrid() {
 }
 
 func Chronon() {
-	time.Sleep(160 * time.Millisecond)
-	for x := 1; x < width-1; x++ { //Across One pixel, when column complete
-		for y := 1; y < height-1; y++ { //Iterates column
-			if wm[x][y] != nil {
+	time.Sleep(250 * time.Millisecond)
+	for x := 1; x < width-1; x++ {
+		for y := 1; y < height-1; y++ {
+			if wm[x][y] != nil { //Resets hasMoved Flags each Chronon
 				wm[x][y].hasMoved = false
 			}
 
 			if wm[x][y] != nil && wm[x][y].species == shark {
-				wm[x][y].health = wm[x][y].health - 1
+				wm[x][y].health = wm[x][y].health - 1 //Reduces health & kills sharks each Chronon
 				if wm[x][y].health == 0 {
 					wm[x][y] = nil
 				}
